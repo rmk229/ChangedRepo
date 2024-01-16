@@ -1,0 +1,46 @@
+{
+  "flights": [
+    {
+      "airline": "Airline1",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 5.5,
+      "price": 500
+    },
+    {
+      "airline": "Airline2",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 6.0,
+      "price": 600
+    },
+    {
+      "airline": "Airline3",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 7.0,
+      "price": 800
+    },
+    {
+      "airline": "Airline4",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 9.0,
+      "price": 1200
+    },
+    {
+      "airline": "Airline5",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 4.3,
+      "price": 450
+    },
+    {
+      "airline": "Airline6",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 10.3,
+      "price": 750
+    },
+    {
+      "airline": "Airline7",
+      "route": "Vladivostok-TelAviv",
+      "flightTime": 2.8,
+      "price": 620
+    }
+  ]
+}
