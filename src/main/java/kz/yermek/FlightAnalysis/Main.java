@@ -1,89 +1,62 @@
 package kz.yermek.FlightAnalysis;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {
-    public void calculateMinFlightTime(JsonNode rootNode) {
-        Map<String, Double> minFlightTimes = new HashMap<>();
+    public List<FlightTicket> readJsonFile(String jsonFilePath) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode rootNode = objectMapper.readTree(new File(jsonFilePath));
 
-        JsonNode flightsNode = rootNode.get("flights");
-        if (flightsNode.isArray()) {
-            for (JsonNode flight : flightsNode) {
-                String airline = flight.get("airline").asText();
-                String route = flight.get("route").asText();
-                double flightTime = flight.get("flightTime").asDouble();
-
-                if (route.equals("Vladivostok-TelAviv")) {
-                    if (!minFlightTimes.containsKey(airline) || flightTime < minFlightTimes.get(airline)) {
-                        minFlightTimes.put(airline, flightTime);
-                    }
-                }
-            }
-
-            System.out.print("Minimum time to flight between Vladivostok and TelAviv: ");
-            System.out.println(findMinValue(minFlightTimes) + " hours");
-        } else {
-            System.out.println("Invalid JSON format. 'flights' array not found");
+        List<FlightTicket> tickets = new ArrayList<>();
+        for (JsonNode ticketNode: rootNode.get("tickets")) {
+            FlightTicket ticket = objectMapper.treeToValue(ticketNode, FlightTicket.class);
+            tickets.add(ticket);
         }
+
+        return tickets;
     }
 
-    private static double findMinValue(Map<String, Double> map) {
-        double minValue = Double.POSITIVE_INFINITY;
+    public Map<String, Integer> calculateMinFlightTime(List<FlightTicket> tickets) throws ParseException {
+        Map<String, Integer> minFlightTime = new HashMap<>();
 
-        for (double value : map.values()) {
-            if (value < minValue) {
-                minValue = value;
+        for (FlightTicket ticket: tickets) {
+            String key = ticket.getCarrier();
+            int flightTime = calculateFlightTime(ticket);
+
+            if (!minFlightTime.containsKey(key) || flightTime < minFlightTime.get(key)) {
+                minFlightTime.put(key, flightTime);
             }
         }
-        return minValue;
+
+        return minFlightTime;
+    }
+    public int calculateFlightTime(FlightTicket ticket) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yy HH:mm", Locale.ENGLISH);
+        Date departureDateTime = format.parse(ticket.getDeparture_date() + " " + ticket.getDeparture_time());
+        Date arrivalDateTime = format.parse(ticket.getArrival_date() + " " + ticket.getArrival_time());
+
+        long timeDifference = arrivalDateTime.getTime() - departureDateTime.getTime();
+        return (int) (timeDifference / (60 * 1000)); // конвертим миллисекунды в минуты
     }
 
-    public void calculatePriceDifference(JsonNode rootNode) {
-        List<Double> prices = new ArrayList<>();
 
-        JsonNode flightsNode = rootNode.get("flights");
-        if (flightsNode.isArray()) {
-            for (JsonNode flight : flightsNode) {
-                String route = flight.get("route").asText();
-                double price = flight.get("price").asDouble();
+    public double calculatePriceDifference(List<FlightTicket> tickets) {
+        double[] prices = tickets.stream().mapToDouble(FlightTicket::getPrice).toArray();
+        Arrays.sort(prices);
 
-                if (route.equals("Vladivostok-TelAviv")) {
-                    prices.add(price);
-                }
-            }
+        double averagePrice = Arrays.stream(prices).average().orElse(0);
+        double medianPrice = (prices.length % 2 == 0) ?
+                (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2 :
+                prices[prices.length / 2];
 
-            // Calculate the average price
-            double averagePrice = calculateAverage(prices);
-
-            // Calculate the median
-            double medianPrice = calculateMedian(prices);
-
-            //Show results
-            System.out.println("Average price: " + averagePrice + " rubles");
-            System.out.println("Median of the prices: " + medianPrice + " rubles");
-            System.out.println("Difference between average price and median: " + (averagePrice - medianPrice) + " rubles");
-        } else {
-            System.out.println("Invalid JSON format. 'flights' array not found.");
-        }
-    }
-
-    public double calculateAverage(List<Double> prices) {
-        DescriptiveStatistics statistics = new DescriptiveStatistics();
-        prices.forEach(statistics::addValue);
-        return statistics.getMean();
-    }
-
-    public double calculateMedian(List<Double> prices) {
-        Collections.sort(prices);
-        int size = prices.size();
-        if (size % 2 == 0) {
-            int middle = size / 2;
-            return (prices.get(middle - 1) + prices.get(middle)) / 2.0;
-        } else {
-            return prices.get(size / 2);
-        }
+        return averagePrice - medianPrice;
     }
 }

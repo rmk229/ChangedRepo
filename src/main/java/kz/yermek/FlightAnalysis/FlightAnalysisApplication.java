@@ -1,33 +1,41 @@
 package kz.yermek.FlightAnalysis;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
 
 @SpringBootApplication
 public class FlightAnalysisApplication {
     public static void main(String[] args) {
         SpringApplication.run(FlightAnalysisApplication.class, args);
 
+        if (args.length != 1) {
+            System.out.println("Usage: java FlightAnalyzerApplication tickets.json");
+            System.exit(1);
+        }
+
         String jsonFilePath = args[0];
 
         try {
             Main main = new Main();
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(new File(jsonFilePath));
+            List<FlightTicket> tickets = main.readJsonFile(jsonFilePath);
 
-            // Minimum flight time between Vladivostok and TelAviv for each carrier
-            main.calculateMinFlightTime(rootNode);
+            Map<String, Integer> minFlightTimes = main.calculateMinFlightTime(tickets);
+            System.out.println("Minimum flight times between VVO and TLV for each carrier:");
 
-            // Difference between average price and median price for a flight between Vladivostok and TelAviv
-            main.calculatePriceDifference(rootNode);
+            minFlightTimes.forEach((carrier, minFlightTime) ->
+                    System.out.println(carrier + ": " + minFlightTime + " minutes"));
 
-        } catch (IOException e) {
-            System.err.println("Error reading JSON file: " + e.getMessage());
+            double priceDifference = main.calculatePriceDifference(tickets);
+            System.out.println("\nDifference between average price and median price for VVO to TLV flights: " + priceDifference);
+
+
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
         }
     }
 }
