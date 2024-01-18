@@ -24,14 +24,17 @@ public class FlightAnalysisApplication {
             Main main = new Main();
             List<FlightTicket> tickets = main.readJsonFile(jsonFilePath);
 
-            Map<String, Integer> minFlightTimes = main.calculateMinFlightTime(tickets);
-            System.out.println("Minimum flight times between VVO and TLV for each carrier:");
+            // Фильтруем билеты только на маршруте Владивосток - Тель-Авив
+            List<FlightTicket> vvoToTlvTickets = main.filterTickets(tickets, "VVO", "TLV");
 
+            // Рассчитываем минимальное время перелета для каждого авиаперевозчика
+            Map<String, Integer> minFlightTimes = main.calculateMinFlightTime(vvoToTlvTickets);
+            System.out.println("Минимальное время перелета между Владивостоком и Тель-Авивом для каждого авиаперевозчика:");
             minFlightTimes.forEach((carrier, minFlightTime) ->
-                    System.out.println(carrier + ": " + minFlightTime + " minutes"));
+                    System.out.println(carrier + ": " + minFlightTime + " минут"));
+            double priceDifference = main.calculatePriceDifference(vvoToTlvTickets);
+            System.out.println("\nРазница между средней ценой и медианой для полетов между Владивостоком и Тель-Авивом: " + priceDifference);
 
-            double priceDifference = main.calculatePriceDifference(tickets);
-            System.out.println("\nDifference between average price and median price for VVO to TLV flights: " + priceDifference);
 
 
         } catch (IOException | ParseException e) {

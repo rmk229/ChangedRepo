@@ -2,7 +2,6 @@ package kz.yermek.FlightAnalysis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,7 @@ public class Main {
         JsonNode rootNode = objectMapper.readTree(new File(jsonFilePath));
 
         List<FlightTicket> tickets = new ArrayList<>();
-        for (JsonNode ticketNode: rootNode.get("tickets")) {
+        for (JsonNode ticketNode : rootNode.get("tickets")) {
             FlightTicket ticket = objectMapper.treeToValue(ticketNode, FlightTicket.class);
             tickets.add(ticket);
         }
@@ -27,7 +26,7 @@ public class Main {
     public Map<String, Integer> calculateMinFlightTime(List<FlightTicket> tickets) throws ParseException {
         Map<String, Integer> minFlightTime = new HashMap<>();
 
-        for (FlightTicket ticket: tickets) {
+        for (FlightTicket ticket : tickets) {
             String key = ticket.getCarrier();
             int flightTime = calculateFlightTime(ticket);
 
@@ -38,6 +37,7 @@ public class Main {
 
         return minFlightTime;
     }
+
     public int calculateFlightTime(FlightTicket ticket) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("dd.MM.yy HH:mm", Locale.ENGLISH);
         Date departureDateTime = format.parse(ticket.getDeparture_date() + " " + ticket.getDeparture_time());
@@ -58,5 +58,15 @@ public class Main {
                 prices[prices.length / 2];
 
         return averagePrice - medianPrice;
+    }
+
+    public List<FlightTicket> filterTickets(List<FlightTicket> tickets, String origin, String destination) {
+        List<FlightTicket> filteredTickets = new ArrayList<>();
+        for (FlightTicket ticket : tickets) {
+            if (ticket.getOrigin().equals(origin) && ticket.getDestination().equals(destination)) {
+                filteredTickets.add(ticket);
+            }
+        }
+        return filteredTickets;
     }
 }
